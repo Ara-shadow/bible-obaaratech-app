@@ -1,0 +1,26 @@
+OBAARATECH BIBLE — FINAL DEPLOYMENT ORDER
+
+1. Create production PostgreSQL database and least-privilege database user.
+2. Configure production .env from .env.example.
+3. Set a strong ADMIN password hash using the project's password-hash command if provided.
+4. npm install
+5. npm run db:generate
+6. npm run db:push
+7. Import the uploaded WEBU corpus using the project's WEBU importer.
+8. Import the supplied OpenBible/TSK-derived cross-references: npm run db:import-crossrefs -- --replace.
+9. Verify Genesis 1, Psalm 23, John 3:16 and Revelation 22, then verify related Scriptures for John 3:16.
+10. npm run build
+11. Start the Fastify API.
+12. Serve the built frontend over HTTPS.
+13. Configure VITE_API_URL and FRONTEND_ORIGIN if frontend/API use separate origins.
+14. Create the production Super Admin.
+15. Test register/login, notes, bookmarks, reading progress and logout.
+16. Test admin CRUD and role permissions.
+17. Remove/disable any development-only seed/admin utilities.
+18. Confirm no API key or database credential is present in frontend source.
+19. Take a database backup before public launch.
+
+Target:
+https://bible.obaaratech.com.ng/
+Admin:
+https://bible.obaaratech.com.ng/admin/login

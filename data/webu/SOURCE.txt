@@ -1,0 +1,5 @@
+World English Bible Updated (WEBU)
+Public domain translation.
+Official source: https://ebible.org/bible/details.php?all=1&id=engwebu
+The name "World English Bible" is a trademark of eBible.org. Do not alter the actual text and continue to call the altered result the World English Bible.
+This corpus is included for the Obaaratech Bible AI import process.

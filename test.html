@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bible API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f8fc;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #0066ff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            margin: 4px;
+        }
+        button:hover {
+            background: #004fc4;
+        }
+        button.quick {
+            background: #475569;
+        }
+        button.quick:hover {
+            background: #334155;
+        }
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+        .button-group label {
+            font-weight: bold;
+            color: #475569;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 16px;
+            background: #f8fafc;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 13px;
+            border: 1px solid #e2e8f0;
+            max-height: 600px;
+            overflow: auto;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .status.running {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .verse-text {
+            font-family: Georgia, serif;
+            font-size: 16px;
+            line-height: 1.8;
+            color: #1a202c;
+            padding: 12px;
+            background: #fafcff;
+            border-left: 4px solid #0066ff;
+            border-radius: 4px;
+            margin: 8px 0;
+        }
+        .success {
+            color: #166534;
+        }
+        .error {
+            color: #991b1b;
+        }
+        .reference {
+            color: #0066ff;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📖 Bible API Test</h1>
+        <p>Testing connection to backend at <code>http://127.0.0.1:4000</code></p>
+
+        <div id="status"></div>
+
+        <div class="button-group">
+            <label>📚 Quick Tests:</label>
+            <button class="quick" onclick="testAPI('John 3:16')">John 3:16</button>
+            <button class="quick" onclick="testAPI('Psalm 23:1')">Psalm 23:1</button>
+            <button class="quick" onclick="testAPI('Romans 8:28')">Romans 8:28</button>
+            <button class="quick" onclick="testAPI('Genesis 1:1')">Genesis 1:1</button>
+            <button class="quick" onclick="testAPI('Philippians 4:13')">Phil 4:13</button>
+        </div>
+
+        <div class="button-group">
+            <label>📖 Old Testament:</label>
+            <button onclick="testAPI('Exodus 20:1-17')">Ten Commandments</button>
+            <button onclick="testAPI('Isaiah 40:31')">Isaiah 40:31</button>
+            <button onclick="testAPI('Proverbs 3:5-6')">Proverbs 3:5-6</button>
+            <button onclick="testAPI('Psalm 119:105')">Psalm 119:105</button>
+            <button onclick="testAPI('Joshua 1:9')">Joshua 1:9</button>
+        </div>
+
+        <div class="button-group">
+            <label>✝️ New Testament:</label>
+            <button onclick="testAPI('Matthew 5:3-12')">Beatitudes</button>
+            <button onclick="testAPI('1 Corinthians 13:4-8')">Love Chapter</button>
+            <button onclick="testAPI('John 14:6')">John 14:6</button>
+            <button onclick="testAPI('2 Timothy 3:16')">2 Tim 3:16</button>
+            <button onclick="testAPI('Revelation 21:4')">Rev 21:4</button>
+        </div>
+
+        <div style="margin-top: 10px;">
+            <label for="customQuery">Custom Search: </label>
+            <input id="customQuery" type="text" placeholder="e.g., John 3:16" style="padding: 8px; width: 300px; border: 1px solid #e2e8f0; border-radius: 6px;">
+            <button onclick="testAPI(document.getElementById('customQuery').value)">Search</button>
+        </div>
+
+        <pre id="result">Click any button to search...</pre>
+    </div>
+
+    <script>
+        // Clean function for frontend
+        function cleanBibleText(text) {
+            if (!text) return '';
+
+            return text
+                .replace(/\\\+w/g, '')
+                .replace(/\|strong="G\d+"\\w\*/g, '')
+                .replace(/\s+/g, ' ')
+                .replace(/ \./g, '.')
+                .replace(/ ,/g, ',')
+                .replace(/ ;/g, ';')
+                .replace(/ :/g, ':')
+                .replace(/\s+([.,!?:;])/g, '$1')
+                .replace(/\\/g, '')
+                .trim();
+        }
+
+        async function checkBackend() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = 'Checking backend...';
+            
+            try {
+                const response = await fetch('http://127.0.0.1:4000/api/health', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    statusDiv.innerHTML = `<div class="status running">✅ Backend is running! ${JSON.stringify(data)}</div>`;
+                } else {
+                    statusDiv.innerHTML = `<div class="status error">❌ Backend returned status: ${response.status}</div>`;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">❌ Backend is NOT running: ${error.message}</div>`;
+            }
+        }
+
+        async function testAPI(query) {
+            if (!query || query.trim() === '') {
+                query = 'John 3:16';
+            }
+            
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = `⏳ Searching for "${query}"...`;
+            
+            try {
+                const url = `http://127.0.0.1:4000/api/search?q=${encodeURIComponent(query)}`;
+                console.log('🔍 Fetching:', url);
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    }
+                });
+                
+                console.log('📡 Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('📥 Data received:', data);
+                
+                if (data.results && data.results.length > 0) {
+                    let output = `✅ SUCCESS!\n`;
+                    output += `🔍 Query: "${query}"\n`;
+                    output += `📊 Total Results: ${data.results.length}\n`;
+                    output += `📖 Old Testament: ${data.byTestament?.OT?.length || 0}\n`;
+                    output += `📖 New Testament: ${data.byTestament?.NT?.length || 0}\n`;
+                    output += `📚 Genres: ${Object.keys(data.byGenre || {}).join(', ')}\n`;
+                    output += `\n${'='.repeat(60)}\n\n`;
+                    
+                    data.results.forEach((verse, index) => {
+                        // Show if raw or cleaned
+                        const isRaw = verse.text.includes('\\+w') || verse.text.includes('|strong');
+                        const cleanedText = cleanBibleText(verse.text);
+                        
+                        output += `📌 ${verse.reference}\n`;
+                        output += `📖 ${verse.bookName} | ${verse.testament} | ${verse.genre}\n`;
+                        output += `🔤 Status: ${isRaw ? '⚠️ RAW (needs cleaning)' : '✅ CLEAN'}\n`;
+                        output += `\n📝 Text:\n`;
+                        output += `${'─'.repeat(40)}\n`;
+                        
+                        // Show cleaned text
+                        output += `${cleanedText}\n`;
+                        output += `${'─'.repeat(40)}\n`;
+                        
+                        // If raw, show raw too
+                        if (isRaw) {
+                            output += `\n🔎 Raw (from API):\n${verse.text.substring(0, 200)}...\n`;
+                        }
+                        
+                        output += `\n${'─'.repeat(60)}\n\n`;
+                    });
+                    
+                    resultDiv.textContent = output;
+                } else {
+                    resultDiv.textContent = `⚠️ No results found for "${query}"`;
+                }
+            } catch (error) {
+                console.error('❌ Error:', error);
+                resultDiv.textContent = 
+                    `❌ ERROR: ${error.message}\n\n` +
+                    `Make sure the backend is running:\n` +
+                    `1. Open a terminal\n` +
+                    `2. Run: node server.js\n` +
+                    `3. Refresh this page\n` +
+                    `4. Try again`;
+            }
+        }
+
+        // Auto-check backend on page load
+        window.onload = function() {
+            checkBackend();
+        };
+    </script>
+</body>
+</html>

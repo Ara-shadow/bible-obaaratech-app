@@ -1,0 +1,319 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/* =========================================================
+   USERS & AI CHAT
+   ========================================================= */
+
+model User {
+  id             String           @id
+  email          String           @unique
+  fullName       String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime
+  password       String?
+  language       LanguageCode     @default(ENGLISH)
+  role           UserRole         @default(MEMBER)
+
+  AIConversation AIConversation[]
+  Content        Content[]
+}
+
+model AIConversation {
+  id        String      @id
+  title     String?
+  userId    String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime
+
+  User      User        @relation(fields: [userId], references: [id])
+  AIMessage AIMessage[]
+
+  @@index([userId])
+}
+
+model AIMessage {
+  id             String         @id
+  role           String
+  content        String
+  conversationId String
+  createdAt      DateTime       @default(now())
+
+  AIConversation AIConversation @relation(
+    fields: [conversationId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  @@index([conversationId])
+}
+
+/* =========================================================
+   BIBLE DATABASE
+   ========================================================= */
+
+model BibleTranslation {
+  id        String      @id
+  name      String
+  code      String      @unique
+  createdAt DateTime    @default(now())
+
+  BibleBook BibleBook[]
+}
+
+model BibleBook {
+  id               String           @id
+  name             String
+  order            Int
+  translationId    String
+
+  BibleTranslation BibleTranslation @relation(
+    fields: [translationId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  BibleChapter BibleChapter[]
+
+  @@index([translationId])
+  @@index([translationId, order])
+}
+
+model BibleChapter {
+  id         String       @id
+  number     Int
+  bookId     String
+
+  BibleBook  BibleBook    @relation(
+    fields: [bookId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  BibleVerse BibleVerse[]
+
+  @@index([bookId])
+  @@unique([bookId, number])
+}
+
+model BibleVerse {
+  id           String       @id
+  number       Int
+  text         String
+  chapterId    String
+
+  BibleChapter BibleChapter @relation(
+    fields: [chapterId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  paraphrases       PassageParaphrase[]
+  crossReferences   CrossReference[] @relation("SourceVerse")
+  referencedBy      CrossReference[] @relation("TargetVerse")
+
+  @@index([chapterId])
+  @@unique([chapterId, number])
+}
+
+/* =========================================================
+   BIBLE AI PARAPHRASES
+   ========================================================= */
+
+model PassageParaphrase {
+  id        String     @id @default(uuid())
+  verseId   String
+  language  String
+  text      String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  verse BibleVerse @relation(
+    fields: [verseId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  @@unique([verseId, language])
+  @@index([language])
+  @@index([verseId])
+}
+
+/* =========================================================
+   CROSS REFERENCES
+   ========================================================= */
+
+model CrossReference {
+  id             String @id @default(uuid())
+  sourceVerseId  String
+  targetVerseId  String
+  source         String @default("TSK")
+
+  sourceVerse BibleVerse @relation(
+    "SourceVerse",
+    fields: [sourceVerseId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  targetVerse BibleVerse @relation(
+    "TargetVerse",
+    fields: [targetVerseId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  @@unique([sourceVerseId, targetVerseId, source])
+  @@index([sourceVerseId])
+  @@index([targetVerseId])
+}
+
+/* =========================================================
+   CATEGORIES & CONTENT
+   ========================================================= */
+
+model Category {
+  id        String    @id
+  name      String    @unique
+  slug      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime
+
+  Content Content[]
+}
+
+model Content {
+  id          String        @id
+  title       String
+  slug        String        @unique
+  type        ContentType
+  status      ContentStatus @default(DRAFT)
+  summary     String?
+  body        String
+  scripture   String?
+  imageUrl    String?
+  language    LanguageCode  @default(ENGLISH)
+  authorId    String?
+  categoryId  String?
+  publishedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime
+
+  User     User?     @relation(fields: [authorId], references: [id])
+  Category Category? @relation(fields: [categoryId], references: [id])
+
+  @@index([authorId])
+  @@index([categoryId])
+  @@index([status])
+}
+
+/* =========================================================
+   DEVOTIONS
+   ========================================================= */
+
+model Devotion {
+  id        String   @id
+  title     String
+  scripture String
+  message   String
+  prayer    String?
+  published Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+
+  @@index([published])
+}
+
+/* =========================================================
+   BIBLE VIBES
+   ========================================================= */
+
+model BibleVibe {
+  id          String   @id @default(uuid())
+  publishDate DateTime
+  reflection  String
+  imageUrl    String?
+  language    String   @default("en")
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([publishDate, published])
+  @@index([language, published])
+}
+
+/* =========================================================
+   KIDS BIBLE STORIES
+   ========================================================= */
+
+model Story {
+  id          String   @id @default(uuid())
+  title       String
+  body        String
+  ageRange    String?
+  moralLesson String?
+  prayer      String?
+  activity    String?
+  imageUrl    String?
+  language    String   @default("en")
+  published   Boolean  @default(false)
+  questions   Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([published, language])
+}
+
+/* =========================================================
+   ADMIN SESSIONS
+   ========================================================= */
+
+model AdminSession {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([expiresAt])
+}
+
+/* =========================================================
+   ENUMS
+   ========================================================= */
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ContentType {
+  DEVOTION
+  BIBLE_VIBE
+  PRAYER
+  SUNDAY_SCHOOL
+  SERMON
+}
+
+enum LanguageCode {
+  ENGLISH
+  YORUBA
+  IGBO
+  HAUSA
+  PIDGIN
+  FRENCH
+}
+
+enum UserRole {
+  ADMIN
+  PASTOR
+  TEACHER
+  MEMBER
+  GUEST
+}

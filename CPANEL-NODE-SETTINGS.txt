@@ -1,0 +1,14 @@
+cPanel Node.js settings for this release
+
+Node.js version: 24.18.1
+Application mode: Production
+Application root: bible-app
+Application URL: https://bible.obaaratech.com.ng
+Application startup file: dist/server.js
+
+This release serves frontend/dist from the Fastify server and exposes /api/* from the same origin.
+After creating the Node app, install dependencies from the cPanel terminal in /home/christch/bible-app:
+npm install
+npm run build
+
+Then configure environment variables before starting/restarting the app.
