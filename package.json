@@ -3,17 +3,18 @@
   "private": true,
   "version": "1.0.0",
   "description": "Obaaratech Bible AI - Bible study, search, Vibes, Kids Bible and sermon preparation.",
+  "type": "module",
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run frontend\"",
     "server": "tsx watch src/server.ts",
     "frontend": "cd frontend && vite",
-    "build:server": "tsc -p tsconfig.server.json",
-    "build:frontend": "cd frontend && tsc -p tsconfig.json && vite build",
-    "build": "npm run build:server && npm run build:frontend",
-    "start": "node dist/src/server.js",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
+    "build:server": "prisma generate && tsc -p tsconfig.server.json",
+    "build:frontend": "cd frontend && tsc -p tsconfig.json && vite build",
+    "build": "npm run build:server && npm run build:frontend",
+    "start": "node dist/src/server.js",
     "admin": "node scripts/hash-password.mjs",
     "import:webu": "node scripts/import-webu.mjs",
     "import:crossrefs": "node scripts/import-crossrefs.mjs"
@@ -47,5 +48,10 @@
   },
   "engines": {
     "node": ">=20"
+  },
+  "allowScripts": {
+    "@prisma/engines@7.9.1": true,
+    "esbuild@0.28.2": true,
+    "prisma@7.9.1": true
   }
 }
