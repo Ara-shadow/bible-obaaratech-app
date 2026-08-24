@@ -1,26 +1,17 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "CommonJS",
-    "moduleResolution": "Node",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "outDir": "dist",
     "rootDir": ".",
     "strict": true,
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "sourceMap": false
+    "forceConsistentCasingInFileNames": true
   },
   "include": [
     "src/**/*.ts",
     "prisma/seed.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "frontend",
-    "frontend/dist",
-    "dist"
   ]
 }

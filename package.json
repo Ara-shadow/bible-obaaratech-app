@@ -48,10 +48,5 @@
   },
   "engines": {
     "node": ">=20"
-  },
-  "allowScripts": {
-    "@prisma/engines@7.9.1": true,
-    "esbuild@0.28.2": true,
-    "prisma@7.9.1": true
   }
 }
